@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react';
+import React, {lazy, Suspense, useEffect, useState} from 'react';
 import { withRouter } from 'react-router-vkminiapps';
 
 import {
@@ -17,22 +17,40 @@ import {
   withAdaptivity,
 } from "@vkontakte/vkui";
 
-import DesktopNavigation from './js/components/navigation/desktop';
-import MobailNavigation from './js/components/navigation/mobail';
+import bridge from "@vkontakte/vk-bridge";
 
 import HomeBotsListModal from './js/components/modals/HomeBotsListModal';
 import HomeBotInfoModal from './js/components/modals/HomeBotInfoModal';
 
 const HomePanelBase = lazy(() => import('./js/panels/home/base'));
 const HomePanelPlaceholder = lazy(() => import('./js/panels/home/placeholder'));
-const ProfilePanelBase = lazy(() => import('./js/panels/profile/base'));
 
 const App = withAdaptivity(({ viewWidth, router }) => {
+  // eslint-disable-next-line
   const setActiveView = (e) => router.toView(e.currentTarget.dataset.id)
-  
+
+  const [scheme, setScheme] = useState('light')
+
   const isDesktop = viewWidth >= 3
   const platform = isDesktop ? VKCOM : usePlatform()
   const hasHeader = isDesktop !== true
+
+  async function getAppScheme(platform) {
+    if (platform === 'vkcom') {
+      setScheme('vkcom_light')
+    } else {
+      bridge.subscribe((e) => {
+        if (e.detail.type === 'VKWebAppUpdateConfig') {
+          let data = e.detail.data.scheme
+          setScheme(data)
+        }
+      })
+      let appScheme = await bridge.send("VKWebAppGetConfig")
+      setScheme(appScheme.scheme)
+    }
+  }
+
+  useEffect(() => {getAppScheme()}, [])
 
   const modals = (
     <ModalRoot>
@@ -51,7 +69,7 @@ const App = withAdaptivity(({ viewWidth, router }) => {
   );
 
   return(
-    <ConfigProvider platform={platform} isWebView>
+    <ConfigProvider platform={platform} isWebView scheme={scheme}>
       <AppRoot>
         <SplitLayout
           header={hasHeader && <PanelHeader separator={false} />}
@@ -64,13 +82,7 @@ const App = withAdaptivity(({ viewWidth, router }) => {
             maxWidth={isDesktop ? '560px' : '100%'}
           >   
             <Epic 
-              activeStory={router.activeView} 
-              tabbar={!isDesktop && 
-                <MobailNavigation
-                  setActiveView={setActiveView}
-                  router={router}
-                />
-              }
+              activeStory={router.activeView}
             >
               <View 
                 id='home'
@@ -90,32 +102,8 @@ const App = withAdaptivity(({ viewWidth, router }) => {
                   </Suspense>
                 </Panel>
               </View>
-
-              <View 
-                id="profile"
-                activePanel={router.activePanel}
-                popout={router.popout}
-                modal={modals}
-              >
-                <Panel id='base'>
-                  <Suspense fallback={<ScreenSpinner/>}>
-                    <ProfilePanelBase 
-                      router={router}
-                      isDesktop={isDesktop}
-                    />
-                  </Suspense>
-                </Panel>
-              </View>
             </Epic>
           </SplitCol>
-
-          {isDesktop && 
-            <DesktopNavigation
-              hasHeader={hasHeader}
-              setActiveView={setActiveView}
-              router={router}
-            />
-          }
             
         </SplitLayout>
       </AppRoot>

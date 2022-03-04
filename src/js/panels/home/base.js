@@ -1,59 +1,39 @@
 import React, { useState } from 'react';
 
 import {
-    Div,  
-    Alert, 
-    Group, 
-    Button, 
+    Group,
+    Header,
     PanelHeader,
     ScreenSpinner,
     Snackbar,
-    Avatar
+    Input,
+    Div,
+    Button,
+    FormLayoutGroup,
+    FormItem,
+    IconButton,
 } from '@vkontakte/vkui'
-import { Icon16Done } from '@vkontakte/icons'
-import img from '../../../svg/chel.svg'
+import {Icon28CopyOutline, Icon28MailOutline} from "@vkontakte/icons";
+import bridge from "@vkontakte/vk-bridge";
 
 function HomePanelBase({router}) {
-    const [showImg, setShowImg] = useState(false)
     const [snackbar, setSnackbar] = useState(null)
+    const [mail, setMail] = useState('jopa@gmail.com')
 
-    function openAlert() {
-        router.toPopout(
-            <Alert
-                actions={[{
-                    title: 'Нет',
-                    autoclose: true,
-                    mode: 'cancel',
-                }, {
-                    title: 'Да',
-                    autoclose: true,
-                    mode: 'destructive',
-                    action: () => setShowImg(true)
-                }]}
-                onClose={() => router.toPopout()}
-                header='Вопрос значит'
-                text='Вас роняли в детстве?'
-            />
-        )
-    }
-
+    // eslint-disable-next-line
     async function openSpinner() {
         router.toPopout(<ScreenSpinner/>)
         await new Promise(resolve => setTimeout(resolve, 2000))
         router.toPopout()
     }
 
+    // eslint-disable-next-line
     function openSnackbar() {
         setSnackbar(
             <Snackbar
                 layout='vertical'
                 onClose={() => setSnackbar(null)}
                 action='Например кнопка'
-                before={
-                    <Avatar size={24} style={{ background: 'var(--accent)' }}> 
-                        <Icon16Done fill='#fff'/> 
-                    </Avatar>
-                }
             >
                 Какой-то текст
             </Snackbar>
@@ -62,68 +42,39 @@ function HomePanelBase({router}) {
 
     return (
         <>
-            <PanelHeader separator={false}>Главная</PanelHeader>
-            <Group>
-                <Div>
-                    <Button 
-                        size="l" 
-                        stretched
-                        mode="secondary" 
-                        onClick={() => router.toPanel('placeholder')}
-                    >
-                        Открыть Panel
-                    </Button>
-                </Div>
-
-                <Div>
-                    <Button 
-                        size="l" 
-                        stretched
-                        mode="secondary" 
-                        onClick={() => openAlert()}
-                    >
-                        Открыть Alert
-                    </Button>
-                </Div>
-
-                <Div>
-                    <Button 
-                        size="l" 
-                        stretched
-                        mode="secondary" 
-                        onClick={() => openSpinner()}
-                    >
-                        Открыть ScreenSpinner
-                    </Button>
-                </Div>
-
-                <Div>
-                    <Button
-                        size="l" 
-                        stretched
-                        mode="secondary" 
-                        onClick={() => openSnackbar()}
-                    >
-                        Открыть Snackbar
-                    </Button>
-                </Div>
-
-                <Div>
-                    <Button 
-                        size="l" 
-                        stretched
-                        mode="secondary" 
-                        onClick={() => router.toModal('botsList')}
-                    >
-                        Открыть ModalPage
-                    </Button>
-                </Div>
-
-                {showImg && 
-                    <Div className='div-center'>
-                        <img src={img} alt="чел"/>
-                    </Div>
-                }
+            <PanelHeader left={<Icon28MailOutline className='icon'/>} separator={false}>Секундная почта</PanelHeader>
+            <Group header={<Header mode='secondary'>Создать почту</Header> }>
+                <FormLayoutGroup
+                    mode='horizontal'
+                >
+                    <FormItem top='Ваша почта'>
+                        <Input
+                            value={mail}
+                            readOnly
+                            after={
+                                <IconButton
+                                    onClick={() => bridge.send("VKWebAppCopyText", {text: mail})}
+                                >
+                                    <Icon28CopyOutline/>
+                                </IconButton>
+                            }
+                        />
+                    </FormItem>
+                </FormLayoutGroup>
+                <FormLayoutGroup mode='horizontal'>
+                    <FormItem>
+                        <Button
+                            size='l'
+                            stretched
+                            className='gen'
+                        >
+                            Сгенерировать почту
+                        </Button>
+                    </FormItem>
+                </FormLayoutGroup>
+            </Group>
+            <Group header={<Header mode='secondary'>Сообщения</Header>}>
+                жопа
             </Group>
             {snackbar}
         </>

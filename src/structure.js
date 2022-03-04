@@ -1,11 +1,10 @@
 const structure = [
 	{
 		id: "home",
-		hash: "home",
+		hash: "mail",
 		panels: [
 			{
 				id: "base",
-				hash: '/base'
 			},
 
 			{
