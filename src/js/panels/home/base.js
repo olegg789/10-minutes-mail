@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 
 import {
     Group,
@@ -6,19 +6,24 @@ import {
     PanelHeader,
     ScreenSpinner,
     Snackbar,
-    Input,
     Div,
     Button,
     FormLayoutGroup,
     FormItem,
-    IconButton,
+    Card, Placeholder,
+    PullToRefresh,
 } from '@vkontakte/vkui'
-import {Icon28CopyOutline, Icon28MailOutline} from "@vkontakte/icons";
+import {
+    Icon24SadFaceOutline,
+    Icon28CopyOutline,
+    Icon28MailOutline,
+    Icon28RefreshOutline,
+    Icon56MailOutline
+} from "@vkontakte/icons";
 import bridge from "@vkontakte/vk-bridge";
 
-function HomePanelBase({router}) {
+function HomePanelBase({router, readMail, mail, mails, disabled, getMails, getMailAdress}) {
     const [snackbar, setSnackbar] = useState(null)
-    const [mail, setMail] = useState('jopa@gmail.com')
 
     // eslint-disable-next-line
     async function openSpinner() {
@@ -42,41 +47,99 @@ function HomePanelBase({router}) {
 
     return (
         <>
-            <PanelHeader left={<Icon28MailOutline className='icon'/>} separator={false}>Секундная почта</PanelHeader>
-            <Group header={<Header mode='secondary'>Создать почту</Header> }>
-                <FormLayoutGroup
-                    mode='horizontal'
-                >
-                    <FormItem top='Ваша почта'>
-                        <Input
-                            value={mail}
-                            readOnly
-                            after={
-                                <IconButton
-                                    onClick={() => bridge.send("VKWebAppCopyText", {text: mail})}
+            <PullToRefresh onRefresh={() => getMails()}>
+                <PanelHeader left={<Icon28MailOutline className='icon'/>} separator={false}>Секундная почта</PanelHeader>
+                <Group header={<Header mode='secondary'>Ваша почта</Header> }>
+                    <FormLayoutGroup
+                        mode='horizontal'
+                    >
+                        <FormItem>
+                            <Card mode='outline'>
+                                <Placeholder
+                                    icon={<Icon56MailOutline/>}
+                                    action={
+                                        <Button
+                                            align='center'
+                                            size='l'
+                                            mode='secondary'
+                                            onClick={() => bridge.send("VKWebAppCopyText", {text: mail})}
+                                            before={<Icon28CopyOutline/>}
+                                            stretched
+                                            disabled={disabled}
+                                        >
+                                            Скопировать
+                                        </Button>
+                                    }
                                 >
-                                    <Icon28CopyOutline/>
-                                </IconButton>
+                                    {mail}
+                                </Placeholder>
+                                <Div>
+                                    <Button
+                                        size='l'
+                                        stretched
+                                        className='gen'
+                                        onClick={() => getMailAdress()}
+                                    >
+                                        Сгенерировать почту
+                                    </Button>
+                                </Div>
+                            </Card>
+                        </FormItem>
+                    </FormLayoutGroup>
+                </Group>
+                <Group header={
+                    <Header
+                        mode='secondary'
+                        aside={mails.length !== 0 &&
+                            <Button
+                                onClick={() => getMails()}
+                                mode='outline'
+                            >
+                                Обновить
+                            </Button>
+                        }
+                    >
+                        Сообщения
+                    </Header>
+                }
+                >
+                    {mails.length !== 0 ?
+                        <>
+                            {mails.map((el) => {
+                                return(
+                                    <Div>
+                                        <Card mode='outline' onClick={() => readMail(el.id, mail.split('@')[0], mail.split('@')[1])}>
+                                            <FormItem top={'От ' + el.from} bottom={'Дата ' + el.date} style={{whiteSpace: 'pre-line'}}>
+                                                {el.subject}
+                                            </FormItem>
+                                        </Card>
+                                    </Div>
+                                )
+                            })
                             }
-                        />
-                    </FormItem>
-                </FormLayoutGroup>
-                <FormLayoutGroup mode='horizontal'>
-                    <FormItem>
-                        <Button
-                            size='l'
-                            stretched
-                            className='gen'
-                        >
-                            Сгенерировать почту
-                        </Button>
-                    </FormItem>
-                </FormLayoutGroup>
-            </Group>
-            <Group header={<Header mode='secondary'>Сообщения</Header>}>
-                жопа
-            </Group>
-            {snackbar}
+                        </>
+                        :
+                        <>
+                            <Placeholder
+                                icon={<Icon24SadFaceOutline width={56} height={56}/>}
+                                action={
+                                    <Button
+                                        before={<Icon28RefreshOutline/>}
+                                        size='l'
+                                        onClick={() => getMails()}
+                                        mode='secondary'
+                                    >
+                                        Обновить
+                                    </Button>
+                                }
+                            >
+                                Тут пока что пусто :(
+                            </Placeholder>
+                        </>
+                    }
+                </Group>
+                {snackbar}
+            </PullToRefresh>
         </>
     );
 }

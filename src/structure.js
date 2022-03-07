@@ -8,8 +8,8 @@ const structure = [
 			},
 
 			{
-				id: "placeholder",
-				hash: '/placeholder'
+				id: "readMail",
+				hash: '/read'
 			}
 		]
 	},

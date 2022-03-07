@@ -30,10 +30,39 @@ const App = withAdaptivity(({ viewWidth, router }) => {
   const setActiveView = (e) => router.toView(e.currentTarget.dataset.id)
 
   const [scheme, setScheme] = useState('light')
+  const [mailId, setMailId] = useState(null)
+  const [login, setLogin] = useState(null)
+  const [domain, setDomain] = useState(null)
+  const [mail, setMail] = useState('Загрузка...')
+  const [mails, setMails] = useState([])
+  const [disabled, setDisabled] = useState(true)
 
   const isDesktop = viewWidth >= 3
   const platform = isDesktop ? VKCOM : usePlatform()
   const hasHeader = isDesktop !== true
+
+  async function getMailAdress() {
+    let response = await fetch('https://www.1secmail.com/api/v1/?action=genRandomMailbox&count=1')
+    let responseJSON = await response.json()
+    setMail(responseJSON[0])
+    setMails([])
+    setDisabled(false)
+  }
+
+  async function openSpinner() {
+    router.toPopout(<ScreenSpinner/>)
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    router.toPopout()
+  }
+
+  async function getMails() {
+    openSpinner()
+    let login = mail.split('@')[0]
+    let domain = mail.split('@')[1]
+    let response = await fetch(`https://www.1secmail.com/api/v1/?action=getMessages&login=${login}&domain=${domain}`)
+    let responseJSON = await response.json()
+    setMails(responseJSON)
+  }
 
   async function getAppScheme(platform) {
     if (platform === 'vkcom') {
@@ -50,14 +79,25 @@ const App = withAdaptivity(({ viewWidth, router }) => {
     }
   }
 
-  useEffect(() => {getAppScheme()}, [])
+  async function readMail(id, login, domain) {
+    setMailId(id)
+    setLogin(login)
+    setDomain(domain)
+    router.toPanel('readMail')
+  }
+
+  useEffect(() => {getAppScheme(); getMailAdress()}, [])
 
   const modals = (
-    <ModalRoot>
+    <ModalRoot activeModal={router.modal}>
       <HomeBotsListModal
-        id="botsList"
+        id="readMail"
+        mailId={mailId}
+        login={login}
+        domain={domain}
         platform={platform}
         router={router}
+        isDesktop={isDesktop}
       />
 
       <HomeBotInfoModal
@@ -86,19 +126,27 @@ const App = withAdaptivity(({ viewWidth, router }) => {
             >
               <View 
                 id='home'
-                activePanel={router.activePanel}
+                activePanel={router.activePanel === 'route_modal' ? 'base' : router.activePanel}
                 popout={router.popout}
                 modal={modals}
               >
                 <Panel id='base'>
                   <Suspense fallback={<ScreenSpinner/>}>
-                    <HomePanelBase router={router}/>
+                    <HomePanelBase
+                        router={router}
+                        readMail={(id, login, domain) => readMail(id, login, domain)}
+                        mail={mail}
+                        mails={mails}
+                        disabled={disabled}
+                        getMails={() => getMails()}
+                        getMailAdress={() => getMailAdress()}
+                    />
                   </Suspense>
                 </Panel>
 
-                <Panel id='placeholder'>
+                <Panel id='readMail'>
                   <Suspense fallback={<ScreenSpinner/>}>
-                    <HomePanelPlaceholder router={router}/>
+                    <HomePanelPlaceholder router={router} mailId={mailId} login={login} domain={domain}/>
                   </Suspense>
                 </Panel>
               </View>

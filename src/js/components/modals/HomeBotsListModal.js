@@ -1,73 +1,68 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 
 import {
-    List, 
-    Cell, 
-    Avatar, 
-    ModalPage, 
-    ModalPageHeader, 
-    PanelHeaderButton, 
-    withPlatform, 
-    IOS
+    withPlatform,
+    FormLayout,
+    FormItem,
+    ModalCard,
+    Button,
+    Div,
 } from "@vkontakte/vkui";
-import { Icon24Dismiss, Icon24Cancel, Icon24Chevron } from '@vkontakte/icons'
 
-const bots = [
-    {
-        name: 'VK Mini Apps',
-        avatar: 'https://sun9-1.userapi.com/impf/c846420/v846420985/1526c3/ISX7VF8NjZk.jpg?size=800x800&quality=96&sign=fefc1a684879e75bd9d36b4ba2907310&type=album',
-        desc: 'Какой-то текст'
-    },
-    {
-        name: 'VK API',
-        avatar: 'https://sun2.is74.userapi.com/impf/c638629/v638629852/2afba/o-dvykjSIB4.jpg?size=600x600&quality=96&sign=553d78e3d9a15f06cacc3f421d9a4919&type=album',
-        desc: 'Какой-то текст'
-    },
-    {
-        name: 'VK Testers',
-        avatar: 'https://sun1.is74.userapi.com/impg/A1ovThuM8zEqmrM9JSCmQreQMma77TzS4GKnQg/KXYKrjN-gvs.jpg?size=1280x1280&quality=95&sign=65c063e8da218030ea2643df3414ece4&type=album',
-        desc: 'Какой-то текст'
-    },
-];
+function BotsListModal({id, platform, router, mailId, login, domain, isDesktop}) {
 
-function BotsListModal({id, platform, router}) {
+    const [from, setFrom] = useState(null)
+    const [title, setTitle] = useState(null)
+    const [text, setText] = useState(null)
+    const [date, setDate] = useState(null)
+
+    async function readMail() {
+        let response = await fetch(`https://www.1secmail.com/api/v1/?action=readMessage&login=${login}&domain=${domain}&id=${mailId}`)
+        let responseJSON = await response.json()
+        console.log(responseJSON)
+        setFrom(responseJSON.from)
+        setTitle(responseJSON.subject)
+        setText(responseJSON.textBody)
+        setDate(responseJSON.date)
+    }
+
+    useEffect(
+        () => {readMail()}, []
+    )
+
     return (
-        <ModalPage
+        <ModalCard
             id={id}
             header={
-                <ModalPageHeader
-                    left={platform !== IOS && 
-                        <PanelHeaderButton onClick={() => router.toBack()}>
-                            <Icon24Cancel/>
-                        </PanelHeaderButton>
-                    }
-
-                    right={platform === IOS && 
-                        <PanelHeaderButton onClick={() => router.toBack()}>
-                            <Icon24Dismiss/>
-                        </PanelHeaderButton>
-                    }
-                >
-                    Сообщества
-                </ModalPageHeader>
+                'Письмо'
             }
             onClose={() => router.toBack()}
             settlingHeight={100}
         >
-            <List>
-                {bots.map((bot, index) => (
-                    <Cell
-                        key={index}
-                        description={bot.desc}
-                        before={<Avatar size={40} src={bot.avatar}/>}
-                        onClick={() => router.toModal('botInfo')}
-                        asideContent={<Icon24Chevron fill="#528bcc"/>}
+            <FormLayout>
+                <FormItem top={'От'}>
+                    {from}
+                </FormItem>
+                <FormItem top={'Заголовок'}>
+                    {title}
+                </FormItem>
+                <FormItem top={'Текст письма'}>
+                    {text}
+                </FormItem>
+                <FormItem top={'Дата'}>
+                    {date}
+                </FormItem>
+                <Div>
+                    <Button
+                        size='l'
+                        stretched
+                        onClick={() => router.toBack()}
                     >
-                        {bot.name}
-                    </Cell>
-                ))}
-            </List>
-        </ModalPage>
+                        Закрыть
+                    </Button>
+                </Div>
+            </FormLayout>
+        </ModalCard>
     );
 }
 
