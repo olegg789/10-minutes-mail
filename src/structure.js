@@ -9,7 +9,7 @@ const structure = [
 
 			{
 				id: "readMail",
-				hash: '/read'
+				hash: ''
 			}
 		]
 	},
