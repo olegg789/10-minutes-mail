@@ -48,7 +48,7 @@ function HomePanelBase({router, readMail, mail, mails, disabled, getMails, getMa
     return (
         <>
             <PullToRefresh onRefresh={() => getMails()}>
-                <PanelHeader left={<Icon28MailOutline className='icon'/>} separator={false}>Секундная почта</PanelHeader>
+                <PanelHeader left={<Icon28MailOutline className='icon'/>} separator>Секундная почта</PanelHeader>
                 <Group header={<Header mode='secondary'>Ваша почта</Header> }>
                     <FormLayoutGroup
                         mode='horizontal'

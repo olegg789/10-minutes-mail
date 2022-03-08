@@ -32,7 +32,7 @@ function HomePanelPlaceholder({router, mailId, login, domain, isDesktop}) {
     return(
         <>
             <PanelHeader 
-                separator={false}
+                separator
                 left={<PanelHeaderBack onClick={() => router.toBack()}/>}
             >
                 Письмо
