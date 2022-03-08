@@ -71,7 +71,7 @@ function HomePanelBase({router, readMail, mail, mails, disabled, getMails, getMa
                                         </Button>
                                     }
                                 >
-                                    {mail}
+                                    {mail !== '' ? mail : 'Нажмите "Сгенерировать почту"'}
                                 </Placeholder>
                                 <Div>
                                     <Button

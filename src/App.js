@@ -41,9 +41,18 @@ const App = withAdaptivity(({ viewWidth, router }) => {
   const platform = isDesktop ? VKCOM : usePlatform()
   const hasHeader = isDesktop !== true
 
+  async function getLastMail() {
+    let lastMail = await bridge.send("VKWebAppStorageGet", {keys: ['lastMail']})
+    setMail(lastMail.keys[0].value)
+    if (lastMail.keys[0].value !== '') {
+      setDisabled(false)
+    }
+  }
+
   async function getMailAdress() {
     let response = await fetch('https://www.1secmail.com/api/v1/?action=genRandomMailbox&count=1')
     let responseJSON = await response.json()
+    await bridge.send("VKWebAppStorageSet", {key: 'lastMail', value: responseJSON[0]})
     setMail(responseJSON[0])
     setMails([])
     setDisabled(false)
@@ -57,8 +66,9 @@ const App = withAdaptivity(({ viewWidth, router }) => {
 
   async function getMails() {
     openSpinner()
-    let login = mail.split('@')[0]
-    let domain = mail.split('@')[1]
+    let lastMail = await bridge.send("VKWebAppStorageGet", {keys: ['lastMail']})
+    let login = lastMail.keys[0].value.split('@')[0]
+    let domain = lastMail.keys[0].value.split('@')[1]
     let response = await fetch(`https://www.1secmail.com/api/v1/?action=getMessages&login=${login}&domain=${domain}`)
     let responseJSON = await response.json()
     setMails(responseJSON)
@@ -86,7 +96,7 @@ const App = withAdaptivity(({ viewWidth, router }) => {
     router.toPanel('readMail')
   }
 
-  useEffect(() => {getAppScheme(); getMailAdress()}, [])
+  useEffect(() => {getAppScheme(); getLastMail(); getMails()}, [])
 
   const modals = (
     <ModalRoot activeModal={router.modal}>
