@@ -14,13 +14,14 @@ import {
   ScreenSpinner,
   usePlatform,
   VKCOM,
-  withAdaptivity,
+  withAdaptivity, Snackbar,
 } from "@vkontakte/vkui";
 
 import bridge from "@vkontakte/vk-bridge";
 
 import HomeBotsListModal from './js/components/modals/HomeBotsListModal';
 import HomeBotInfoModal from './js/components/modals/HomeBotInfoModal';
+import {Icon28CheckCircleOutline} from "@vkontakte/icons";
 
 const HomePanelBase = lazy(() => import('./js/panels/home/base'));
 const HomePanelPlaceholder = lazy(() => import('./js/panels/home/placeholder'));
@@ -36,6 +37,7 @@ const App = withAdaptivity(({ viewWidth, router }) => {
   const [mail, setMail] = useState('Загрузка...')
   const [mails, setMails] = useState([])
   const [disabled, setDisabled] = useState(true)
+  const [snackbar, setSnackbar] = useState(null)
 
   const isDesktop = viewWidth >= 3
   const platform = isDesktop ? VKCOM : usePlatform()
@@ -54,6 +56,19 @@ const App = withAdaptivity(({ viewWidth, router }) => {
     }
   }
 
+  function openSnackbar() {
+    setSnackbar(
+        <Snackbar
+            style={{marginBottom: -50}}
+            layout='vertical'
+            onClose={() => setSnackbar(null)}
+            before={<Icon28CheckCircleOutline/>}
+        >
+          Почта обновлена!
+        </Snackbar>
+    )
+  }
+
   async function getMailAdress() {
     try {
       let response = await fetch('https://www.1secmail.com/api/v1/?action=genRandomMailbox&count=1')
@@ -62,6 +77,7 @@ const App = withAdaptivity(({ viewWidth, router }) => {
       setMail(responseJSON[0])
       setMails([])
       setDisabled(false)
+      openSnackbar()
     }
     catch (err) {
       console.log(err)
@@ -183,6 +199,8 @@ const App = withAdaptivity(({ viewWidth, router }) => {
                         disabled={disabled}
                         getMails={() => getMails()}
                         getMailAdress={() => getMailAdress()}
+                        snackbar={snackbar}
+                        setSnackbar={(value) => setSnackbar(value)}
                     />
                   </Suspense>
                 </Panel>

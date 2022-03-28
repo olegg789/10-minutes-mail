@@ -1,36 +1,43 @@
-import React, {useState} from 'react';
+import React from 'react';
 
 import {
     Group,
     Header,
     PanelHeader,
     ScreenSpinner,
-    Snackbar,
     Div,
     Button,
     FormLayoutGroup,
     FormItem,
-    Card, Placeholder,
-    PullToRefresh,
+    Card,
+    Placeholder,
     Alert,
+    PullToRefresh, Snackbar
 } from '@vkontakte/vkui'
 import {
-    Icon24SadFaceOutline,
-    Icon28CheckCircleOutline,
+    Icon24SadFaceOutline, Icon28CheckCircleOutline,
     Icon28CopyOutline,
     Icon28MailOutline,
     Icon56MailOutline
 } from "@vkontakte/icons";
 import bridge from "@vkontakte/vk-bridge";
 
-function HomePanelBase({router, readMail, mail, mails, disabled, getMails, getMailAdress}) {
-    const [snackbar, setSnackbar] = useState(null)
+function HomePanelBase({router, readMail, mail, mails, disabled, getMails, getMailAdress, snackbar, setSnackbar}) {
 
     // eslint-disable-next-line
     async function openSpinner() {
         router.toPopout(<ScreenSpinner/>)
         await new Promise(resolve => setTimeout(resolve, 2000))
         router.toPopout()
+    }
+
+    function normalTime(time) {
+        const date = time.split(' ')[0].replace(/-/gi, ' ')
+        const t = time.split(' ')[1]
+        const hour = Number(t.split(':')[0]) + 1
+        const minute = t.split(':')[1]
+        const sec = t.split(':')[2]
+        return `Дата ${date}, время ${hour}:${minute}:${sec}`
     }
 
     function openAlert() {
@@ -44,7 +51,7 @@ function HomePanelBase({router, readMail, mail, mails, disabled, getMails, getMa
                     title: 'Да',
                     autoclose: true,
                     mode: 'destructive',
-                    action: () => {getMailAdress(); openSnackbar()}
+                    action: () => {getMailAdress()}
                 }]}
                 onClose={() => router.toPopout()}
                 header='Подтверждение'
@@ -53,8 +60,7 @@ function HomePanelBase({router, readMail, mail, mails, disabled, getMails, getMa
         )
     }
 
-    // eslint-disable-next-line
-    function openSnackbar() {
+    function openSnackBarCopy() {
         setSnackbar(
             <Snackbar
                 style={{marginBottom: -50}}
@@ -62,15 +68,15 @@ function HomePanelBase({router, readMail, mail, mails, disabled, getMails, getMa
                 onClose={() => setSnackbar(null)}
                 before={<Icon28CheckCircleOutline/>}
             >
-                Почта обновлена!
+                Адрес скопирован!
             </Snackbar>
         )
     }
 
     return (
         <>
+            <PanelHeader left={<Icon28MailOutline className='icon'/>} separator>Секундная почта</PanelHeader>
             <PullToRefresh onRefresh={() => getMails()}>
-                <PanelHeader left={<Icon28MailOutline className='icon'/>} separator>Секундная почта</PanelHeader>
                 <Group header={<Header mode='secondary'>Ваша почта</Header> }>
                     <FormLayoutGroup
                         mode='horizontal'
@@ -79,31 +85,36 @@ function HomePanelBase({router, readMail, mail, mails, disabled, getMails, getMa
                             <Card mode='outline'>
                                 <Placeholder
                                     icon={<Icon56MailOutline/>}
-                                    action={
-                                        <Button
-                                            align='center'
-                                            size='l'
-                                            mode='secondary'
-                                            onClick={() => bridge.send("VKWebAppCopyText", {text: mail})}
-                                            before={<Icon28CopyOutline/>}
-                                            stretched
-                                            disabled={disabled}
-                                        >
-                                            Скопировать
-                                        </Button>
-                                    }
+                                    style={{marginBottom: -40}}
                                 >
-                                    {mail !== '' ? mail : 'Нажмите "Сгенерировать почту"'}
+                                    <big>
+                                        {mail !== '' ? mail : 'Нажмите "Сгенерировать почту"'}
+                                    </big>
                                 </Placeholder>
                                 <Div>
-                                    <Button
-                                        size='l'
-                                        stretched
-                                        className='gen'
-                                        onClick={() => openAlert()}
-                                    >
-                                        Сгенерировать почту
-                                    </Button>
+                                    <FormLayoutGroup mode='horizontal'>
+                                        <Button
+                                            size='l'
+                                            stretched
+                                            style={{marginLeft: -7}}
+                                            className='gen'
+                                            onClick={() => {mail !== '' ? openAlert() : getMailAdress()}}
+                                        >
+                                            Сгенерировать почту
+                                        </Button>
+
+                                        <Button
+                                            align='center'
+                                            style={{ marginLeft: 10}}
+                                            size='l'
+                                            mode='secondary'
+                                            onClick={() => {bridge.send("VKWebAppCopyText", {text: mail}); openSnackBarCopy()}}
+                                            before={<Icon28CopyOutline/>}
+                                            disabled={disabled}
+                                        >
+                                        </Button>
+                                    </FormLayoutGroup>
+
                                 </Div>
                             </Card>
                         </FormItem>
@@ -123,7 +134,7 @@ function HomePanelBase({router, readMail, mail, mails, disabled, getMails, getMa
                                 return(
                                     <Div>
                                         <Card mode='outline' onClick={() => readMail(el.id, mail.split('@')[0], mail.split('@')[1])}>
-                                            <FormItem top={'От ' + el.from} bottom={'Дата ' + el.date} style={{whiteSpace: 'pre-line'}}>
+                                            <FormItem top={'От ' + el.from} bottom={normalTime(el.date)} style={{whiteSpace: 'pre-line'}}>
                                                 {el.subject !== '' ? el.subject : 'Без темы'}
                                             </FormItem>
                                         </Card>

@@ -40,3 +40,20 @@
 .icon {
     margin-left: 10px;
 }
+
+.scroll {
+    width: available !important;
+    overflow-x: auto !important;
+    word-wrap: normal;
+    -ms-user-select: auto;
+    -moz-user-select: auto;
+    -webkit-user-select: auto;
+    user-select: auto;
+}
+
+.copy {
+    -ms-user-select: auto;
+    -moz-user-select: auto;
+    -webkit-user-select: auto;
+    user-select: auto;
+}
